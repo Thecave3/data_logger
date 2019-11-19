@@ -10,6 +10,8 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Locale;
 
+import static it.sapienza.datalogger.utility.Utility.DEBUG;
+
 public class SensorLogger {
     private final static String TAG = SensorLogger.class.getSimpleName();
     private String path;
@@ -21,7 +23,8 @@ public class SensorLogger {
         file = new File(_context.getFilesDir(), now.concat(".txt"));
 
         boolean res = file.createNewFile();
-        Log.d(TAG, "file created? " + res);
+        if (DEBUG)
+            Log.d(TAG, "file created? " + res);
 
         fileWriter = new FileWriter(file);
 

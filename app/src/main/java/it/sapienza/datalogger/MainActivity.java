@@ -1,24 +1,28 @@
 package it.sapienza.datalogger;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
-import android.view.View;
+import android.util.Log;
 import android.widget.Button;
+import android.widget.RadioGroup;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 import java.io.IOException;
-import java.util.Date;
 
 import it.sapienza.datalogger.sensor_logger.SensorLogger;
 
+import static it.sapienza.datalogger.utility.Utility.DEBUG;
+
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
-    private static final int SAMPLING_RATE = 20000;
+    private static final String TAG = MainActivity.class.getSimpleName();
+
+    private int samplingRate = 20000;
     private boolean gyroReady = false;
     private boolean accelReady = false;
     private SensorLogger sensorLogger;
@@ -28,6 +32,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private float accelXaxis, accelYaxis, accelZaxis;
     private float gyroXaxis, gyroYaxis, gyroZaxis;
     private long startTime = 0L;
+
+    private RadioGroup timeRadioGroup;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,11 +49,38 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         final SensorEventListener listener = this;
 
+
+        timeRadioGroup = findViewById(R.id.timeRadioGroup);
+
+        timeRadioGroup.setOnCheckedChangeListener((group, checkedId) -> {
+            switch (checkedId) {
+                case R.id.fastest:
+                    samplingRate = SensorManager.SENSOR_DELAY_FASTEST;
+                    break;
+                case R.id.ui:
+                    samplingRate = SensorManager.SENSOR_DELAY_UI;
+                    break;
+                case R.id.game:
+                    samplingRate = SensorManager.SENSOR_DELAY_GAME;
+                    break;
+                case R.id.normal:
+                    samplingRate = SensorManager.SENSOR_DELAY_NORMAL;
+                    break;
+                case R.id.custom:
+                    // enable input
+                    break;
+                default:
+                    if (DEBUG)
+                        Log.e(TAG, "Error in selecting checking id");
+            }
+        });
+
+
         startBtn.setOnClickListener(v -> {
             try {
                 sensorLogger = new SensorLogger(getApplicationContext(), "");
-                mSensorManager.registerListener(listener, accelerometer, SAMPLING_RATE);
-                mSensorManager.registerListener(listener, gyroscope, SAMPLING_RATE);
+                mSensorManager.registerListener(listener, accelerometer, samplingRate);
+                mSensorManager.registerListener(listener, gyroscope, samplingRate);
 //                startBtn.setClickable(false);
 //                startBtn.setVisibility(View.INVISIBLE);
             } catch (IOException e) {
@@ -55,7 +88,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             }
         });
 
-        stopBtn.setOnClickListener(v -> {
+        stopBtn.setOnClickListener(v ->
+
+        {
             try {
                 mSensorManager.unregisterListener(listener);
                 sensorLogger.closeLogger();
