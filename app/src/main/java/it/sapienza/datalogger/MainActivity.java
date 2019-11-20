@@ -1,6 +1,8 @@
 package it.sapienza.datalogger;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -13,6 +15,7 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.BoardiesITSolutions.FileDirectoryPicker.DirectoryPicker;
 import com.google.android.material.textfield.TextInputEditText;
 
 import java.io.IOException;
@@ -22,7 +25,7 @@ import it.sapienza.datalogger.sensor_logger.SensorLogger;
 import static it.sapienza.datalogger.utility.Utility.DEBUG;
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
-
+    private static final int REQUEST_DIRECTORY_PICKER = 1;
     private static final String TAG = MainActivity.class.getSimpleName();
 
     private int samplingRate;
@@ -40,7 +43,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private long startTime = 0L;
 
     private TextView debugger;
-    private TextInputEditText customTimeEditText;
+    private TextInputEditText customTimeEditText, customPathEditText;
     private RadioGroup timeRadioGroup;
 
     @Override
@@ -58,6 +61,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         accelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 
         customTimeEditText = findViewById(R.id.custom_time_value);
+        customPathEditText = findViewById(R.id.custom_path);
+
+        customPathEditText.setOnClickListener(v -> pickSaveDirectory());
+        customPathEditText.setText(getFilesDir().getPath());
 
         timeRadioGroup = findViewById(R.id.timeRadioGroup);
 
@@ -88,11 +95,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         });
 
         timeRadioGroup.check(R.id.fastest);
+        sensorLogger = new SensorLogger();
 
         final SensorEventListener listener = this;
         startBtn.setOnClickListener(v -> {
             try {
-                sensorLogger = new SensorLogger(getApplicationContext(), "");
+                sensorLogger.openLogger(getApplicationContext());
                 samplingRate = customTimeEditText.isEnabled() ? getCustomTime(String.valueOf(customTimeEditText.getText())) : samplingRate;
                 mSensorManager.registerListener(listener, accelerometer, samplingRate);
                 mSensorManager.registerListener(listener, gyroscope, samplingRate);
@@ -102,6 +110,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 stopBtn.setEnabled(true);
             } catch (IOException e) {
                 e.printStackTrace();
+                writeDebug(e.getMessage());
+                stopBtn.performClick();
             }
         });
 
@@ -112,7 +122,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            sensorLogger = null;
             stopBtn.setEnabled(false);
             timeRadioGroup.setEnabled(true);
             startBtn.setEnabled(true);
@@ -159,6 +168,26 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
         writeDebug("onAccuracyChanged: accuracy changed");
     }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == MainActivity.REQUEST_DIRECTORY_PICKER) {
+            if (resultCode == Activity.RESULT_OK) {
+                String pickedPath = data.getStringExtra(DirectoryPicker.BUNDLE_CHOSEN_DIRECTORY);
+                sensorLogger.setPath(pickedPath);
+                customPathEditText.setText(pickedPath);
+            }
+        }
+    }
+
+
+    private void pickSaveDirectory() {
+        //Create the intent and start the activity
+        Intent intent = new Intent(this, DirectoryPicker.class);
+        startActivityForResult(intent, REQUEST_DIRECTORY_PICKER);
+    }
+
 
     /**
      * Auxiliary method to parse correctly the custom time in input by the user

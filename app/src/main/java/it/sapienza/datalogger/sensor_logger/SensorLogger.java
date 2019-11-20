@@ -18,28 +18,66 @@ public class SensorLogger {
     private File file;
     private FileWriter fileWriter;
 
-    public SensorLogger(Context _context, String path) throws IOException {
+    /**
+     *
+     */
+    public SensorLogger() {
+
+    }
+
+    /**
+     * @param path
+     */
+    public SensorLogger(String path) {
+
+    }
+
+    /**
+     * @return
+     */
+    public String getPath() {
+        return path;
+    }
+
+    /**
+     * @param path
+     */
+    public void setPath(String path) {
+        this.path = path;
+    }
+
+    /**
+     * @param _context
+     * @throws IOException
+     */
+    public void openLogger(Context _context) throws IOException {
         final String now = new SimpleDateFormat("MMMM_dd_yyyy_HH_mm_ss", Locale.ITALY).format(Calendar.getInstance(Locale.ITALY).getTime());
-        file = new File(_context.getFilesDir(), now.concat(".txt"));
+        if (path == null)
+            file = new File(_context.getFilesDir(), now.concat(".txt"));
+        else
+            file = new File(this.path, now.concat(".txt"));
 
         boolean res = file.createNewFile();
         if (DEBUG)
             Log.d(TAG, "file created? " + res);
 
         fileWriter = new FileWriter(file);
-
-        this.path = path;
     }
 
-    public String getPath() {
-        return path;
-    }
 
+    /**
+     * @param timestamp
+     * @param values
+     * @throws IOException
+     */
     public void writeLog(long timestamp, String values) throws IOException {
         fileWriter.append(String.valueOf(timestamp)).append(",").append(values).append("\n");
     }
 
 
+    /**
+     * @throws IOException
+     */
     public void closeLogger() throws IOException {
         fileWriter.flush();
         fileWriter.close();

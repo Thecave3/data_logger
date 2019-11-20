@@ -7,6 +7,18 @@
     tools:context=".MainActivity">
 
     <TextView
+        android:id="@+id/debugger"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="5dp"
+        android:background="#4b000000"
+        android:maxLines="10"
+        android:minHeight="100dp"
+        android:minLines="1"
+        android:text="@string/debugger" />
+
+
+    <TextView
         android:id="@+id/desc_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -68,6 +80,23 @@
             android:inputType="number" />
 
     </com.google.android.material.textfield.TextInputLayout>
+    
+    <com.google.android.material.textfield.TextInputLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/desc_custom_path"
+        android:padding="5dp">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/custom_path"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clickable="true"
+            android:enabled="false"
+            android:focusable="true" />
+
+    </com.google.android.material.textfield.TextInputLayout>
 
     <LinearLayout
         android:layout_width="wrap_content"
@@ -94,18 +123,6 @@
             android:text="@string/stop" />
 
     </LinearLayout>
-
-
-    <TextView
-        android:id="@+id/debugger"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="5dp"
-        android:background="#4b000000"
-        android:maxLines="10"
-        android:minHeight="100dp"
-        android:minLines="1"
-        android:text="@string/debugger" />
 
 
 </LinearLayout>
