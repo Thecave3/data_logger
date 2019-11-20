@@ -18,7 +18,7 @@
         android:id="@+id/timeRadioGroup"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:checkedButton="@+id/fastest">
+        android:padding="5dp">
 
         <RadioButton
             android:id="@+id/fastest"
@@ -33,16 +33,17 @@
             android:text="@string/game" />
 
         <RadioButton
-            android:id="@+id/normal"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/normal" />
-
-        <RadioButton
             android:id="@+id/ui"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/ui_update_rate" />
+
+
+        <RadioButton
+            android:id="@+id/normal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/normal" />
 
         <RadioButton
             android:id="@+id/custom"
@@ -56,25 +57,30 @@
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="@string/desc_custom_time">
+        android:hint="@string/desc_custom_time"
+        android:padding="5dp">
 
         <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/custom_time_value"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox" />
+            android:inputType="number" />
 
     </com.google.android.material.textfield.TextInputLayout>
 
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center">
+        android:layout_gravity="center"
+        android:padding="5dp">
 
         <Button
             android:id="@+id/buttonStart"
             style="?android:attr/buttonBarButtonStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_margin="5dp"
             android:padding="5dp"
             android:text="@string/start" />
 
@@ -83,9 +89,23 @@
             style="?android:attr/buttonBarButtonStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_margin="5dp"
+            android:padding="5dp"
             android:text="@string/stop" />
 
     </LinearLayout>
+
+
+    <TextView
+        android:id="@+id/debugger"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="5dp"
+        android:background="#4b000000"
+        android:maxLines="10"
+        android:minHeight="100dp"
+        android:minLines="1"
+        android:text="@string/debugger" />
 
 
 </LinearLayout>
