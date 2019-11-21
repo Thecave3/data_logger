@@ -73,24 +73,29 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 case R.id.fastest:
                     samplingRate = SensorManager.SENSOR_DELAY_FASTEST;
                     customTimeEditText.setEnabled(false);
+                    writeDebug("Fastest delay selected.");
                     break;
                 case R.id.ui:
                     samplingRate = SensorManager.SENSOR_DELAY_UI;
                     customTimeEditText.setEnabled(false);
+                    writeDebug("UI delay selected.");
                     break;
                 case R.id.game:
                     samplingRate = SensorManager.SENSOR_DELAY_GAME;
                     customTimeEditText.setEnabled(false);
+                    writeDebug("Game delay selected.");
                     break;
                 case R.id.normal:
                     samplingRate = SensorManager.SENSOR_DELAY_NORMAL;
                     customTimeEditText.setEnabled(false);
+                    writeDebug("Normal delay selected.");
                     break;
                 case R.id.custom:
                     customTimeEditText.setEnabled(true);
+                    writeDebug("Selected a custom delay, please put the value in the following field.");
                     break;
                 default:
-                    writeDebug("Error in selecting checking id");
+                    writeDebug("Error in selecting rate sampling.");
             }
         });
 
@@ -99,6 +104,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         final SensorEventListener listener = this;
         startBtn.setOnClickListener(v -> {
+            writeDebug("Started data taking.");
             try {
                 sensorLogger.openLogger(getApplicationContext());
                 samplingRate = customTimeEditText.isEnabled() ? getCustomTime(String.valueOf(customTimeEditText.getText())) : samplingRate;
@@ -116,6 +122,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         });
 
         stopBtn.setOnClickListener(v -> {
+            writeDebug("Data taking stopped.");
             try {
                 mSensorManager.unregisterListener(listener);
                 sensorLogger.closeLogger();
@@ -155,7 +162,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
             String values = String.format("%s,%s,%s,%s,%s,%s", accelXaxis, accelYaxis, accelZaxis, gyroXaxis, gyroYaxis, gyroZaxis);
             long timestamp = event.timestamp - startTime;
-
+            writeDebug("New value appended!");
             try {
                 sensorLogger.writeLog(timestamp, values);
             } catch (IOException e) {
@@ -177,6 +184,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 String pickedPath = data.getStringExtra(DirectoryPicker.BUNDLE_CHOSEN_DIRECTORY);
                 sensorLogger.setPath(pickedPath);
                 customPathEditText.setText(pickedPath);
+                writeDebug("New path selected.");
             }
         }
     }
