@@ -14,7 +14,7 @@
         android:background="#4b000000"
         android:maxLines="10"
         android:minHeight="100dp"
-        android:minLines="1"
+        android:minLines="10"
         android:text="@string/debugger" />
 
 

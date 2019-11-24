@@ -106,14 +106,20 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         startBtn.setOnClickListener(v -> {
             writeDebug("Started data taking.");
             try {
+                customPathEditText.setEnabled(false);
+                customPathEditText.setOnClickListener(null);
+
                 sensorLogger.openLogger(getApplicationContext());
+
                 samplingRate = customTimeEditText.isEnabled() ? getCustomTime(String.valueOf(customTimeEditText.getText())) : samplingRate;
                 mSensorManager.registerListener(listener, accelerometer, samplingRate);
                 mSensorManager.registerListener(listener, gyroscope, samplingRate);
+
                 timeRadioGroup.setEnabled(false);
                 startBtn.setEnabled(false);
                 customTimeEditText.setEnabled(false);
                 stopBtn.setEnabled(true);
+
             } catch (IOException e) {
                 e.printStackTrace();
                 writeDebug(e.getMessage());
@@ -133,6 +139,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             timeRadioGroup.setEnabled(true);
             startBtn.setEnabled(true);
             customTimeEditText.setEnabled(true);
+            customPathEditText.setEnabled(true);
+            customPathEditText.setOnClickListener(view -> pickSaveDirectory());
         });
     }
 
@@ -162,7 +170,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
             String values = String.format("%s,%s,%s,%s,%s,%s", accelXaxis, accelYaxis, accelZaxis, gyroXaxis, gyroYaxis, gyroZaxis);
             long timestamp = event.timestamp - startTime;
-            writeDebug("New value appended!");
+            //writeDebug("New value appended!");
             try {
                 sensorLogger.writeLog(timestamp, values);
             } catch (IOException e) {
