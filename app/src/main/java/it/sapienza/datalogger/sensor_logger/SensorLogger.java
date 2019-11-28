@@ -66,12 +66,17 @@ public class SensorLogger {
 
 
     /**
+     * Official format
+     * <p>
+     * timestamp,sensorType,values
+     *
+     * @param sensorType
      * @param timestamp
      * @param values
      * @throws IOException
      */
-    public void writeLog(long timestamp, String values) throws IOException {
-        fileWriter.append(String.valueOf(timestamp)).append(",").append(values).append("\n");
+    public void writeLog(String sensorType, long timestamp, String values) throws IOException {
+        fileWriter.append(String.valueOf(timestamp)).append(",").append(sensorType).append(",").append(values).append("\n");
     }
 
 

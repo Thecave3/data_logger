@@ -144,39 +144,33 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         });
     }
 
+    /**
+     * values = xValue,yValue,zValue
+     *
+     * @param event
+     */
     @Override
     public void onSensorChanged(SensorEvent event) {
-        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-            accelReady = true;
-            accelXaxis = event.values[0];
-            accelYaxis = event.values[1];
-            accelZaxis = event.values[2];
+
+        accelXaxis = event.values[0];
+        accelYaxis = event.values[1];
+        accelZaxis = event.values[2];
+
+        gyroXaxis = event.values[0];
+        gyroYaxis = event.values[1];
+        gyroZaxis = event.values[2];
+
+        if (startTime == 0L)
+            startTime = event.timestamp;
+
+        String values = String.format("%s,%s,%s", event.values[0], event.values[1], event.values[2]);
+        long timestamp = event.timestamp - startTime;
+        try {
+            sensorLogger.writeLog(event.sensor.getStringType(), timestamp, values);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 
-        if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
-            gyroReady = true;
-            gyroXaxis = event.values[0];
-            gyroYaxis = event.values[1];
-            gyroZaxis = event.values[2];
-        }
-
-
-        if (accelReady && gyroReady) {
-            accelReady = false;
-            gyroReady = false;
-
-            if (startTime == 0L)
-                startTime = event.timestamp;
-
-            String values = String.format("%s,%s,%s,%s,%s,%s", accelXaxis, accelYaxis, accelZaxis, gyroXaxis, gyroYaxis, gyroZaxis);
-            long timestamp = event.timestamp - startTime;
-            //writeDebug("New value appended!");
-            try {
-                sensorLogger.writeLog(timestamp, values);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
     }
 
     @Override
