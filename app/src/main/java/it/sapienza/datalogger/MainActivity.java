@@ -142,6 +142,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             customPathEditText.setEnabled(true);
             customPathEditText.setOnClickListener(view -> pickSaveDirectory());
         });
+
+        stopBtn.setEnabled(false);
     }
 
     /**
@@ -175,7 +177,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
-        writeDebug("onAccuracyChanged: accuracy changed");
+        writeDebug("onAccuracyChanged: accuracy changed of " + sensor.getStringType());
     }
 
     @Override
