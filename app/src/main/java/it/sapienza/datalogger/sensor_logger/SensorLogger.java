@@ -1,12 +1,12 @@
 package it.sapienza.datalogger.sensor_logger;
 
-import android.content.Context;
-import android.os.Environment;
+import android.content.ContentResolver;
 import android.util.Log;
 
-import java.io.File;
-import java.io.FileWriter;
+import androidx.documentfile.provider.DocumentFile;
+
 import java.io.IOException;
+import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Locale;
@@ -15,52 +15,30 @@ import static it.sapienza.datalogger.utility.Utility.DEBUG;
 
 public class SensorLogger {
     private final static String TAG = SensorLogger.class.getSimpleName();
-    private String path;
-    private File file;
-    private FileWriter fileWriter;
+    private DocumentFile saveDirectory;
+    private OutputStream outputStream;
 
     /**
-     * @param _context
+     * @param saveDirectory the save directory picked by the user
      */
-    public SensorLogger(Context _context) {
-
-        if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
-            File sdFileDir = Environment.getExternalStorageDirectory();
-            this.path = sdFileDir.getPath();
-            Log.d(TAG, "SensorLogger: ");
-        } else {
-            File externalFilesDir = _context.getExternalFilesDir(null);
-            if (externalFilesDir != null)
-                this.path = externalFilesDir.getPath();
-        }
+    public SensorLogger(DocumentFile saveDirectory) {
+        this.saveDirectory = saveDirectory;
     }
 
     /**
-     * @return
+     * @return the path of the save directory
      */
     public String getPath() {
-        return path;
+        return saveDirectory.getName();
     }
 
     /**
-     * @param path
+     * @throws IOException various reasons
      */
-    public void setPath(String path) {
-        this.path = path;
-    }
-
-    /**
-     * @throws IOException
-     */
-    public void openLogger() throws IOException {
+    public void openLogger(ContentResolver _contentResolver) throws IOException {
         final String now = new SimpleDateFormat("MMMM_dd_yyyy_HH_mm_ss", Locale.ITALY).format(Calendar.getInstance(Locale.ITALY).getTime());
-        file = new File(this.path, now.concat(".txt"));
-
-        boolean res = file.createNewFile();
-        if (DEBUG)
-            Log.d(TAG, "file " + now.concat("txt") + "created? " + res);
-
-        fileWriter = new FileWriter(file);
+        DocumentFile file = saveDirectory.createFile("text/plain", now.concat(".txt"));
+        outputStream = _contentResolver.openOutputStream(file.getUri(), "wa");
     }
 
 
@@ -69,24 +47,27 @@ public class SensorLogger {
      * <p>
      * timestamp,sensorType,values
      *
-     * @param sensorType
-     * @param timestamp
-     * @param values
-     * @throws IOException
+     * @param sensorType from what sensor data comes
+     * @param timestamp timestamp of the measure
+     * @param values actual value
+     * @throws IOException various reasons
      */
     public void writeLog(String sensorType, long timestamp, String values) throws IOException {
-        fileWriter.append(String.valueOf(timestamp)).append(",").append(sensorType).append(",").append(values).append("\n");
+        String input = timestamp + "," + sensorType + "," + values + "\n";
+        outputStream.write(input.getBytes());
         if (DEBUG)
             Log.d(TAG, "writeLog: value written");
     }
 
 
     /**
-     * @throws IOException
+     * @throws IOException various reason
      */
     public void closeLogger() throws IOException {
-        fileWriter.flush();
-        fileWriter.close();
+        if (outputStream != null) {
+            outputStream.flush();
+            outputStream.close();
+        }
         if (DEBUG)
             Log.d(TAG, "Logger closed");
     }
