@@ -43,13 +43,14 @@ public class SensorLogger {
 
 
     /**
-     * Official format
+     * Official format:
      * <p>
      * timestamp,sensorType,values
+     * </p>
      *
      * @param sensorType from what sensor data comes
-     * @param timestamp timestamp of the measure
-     * @param values actual value
+     * @param timestamp  timestamp of the measure
+     * @param values     actual value
      * @throws IOException various reasons
      */
     public void writeLog(String sensorType, long timestamp, String values) throws IOException {
