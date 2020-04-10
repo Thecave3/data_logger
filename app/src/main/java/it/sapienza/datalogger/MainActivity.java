@@ -1,15 +1,12 @@
 package it.sapienza.datalogger;
 
 import android.Manifest;
-import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -17,18 +14,13 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.RadioGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import androidx.documentfile.provider.DocumentFile;
 
 import com.google.android.material.textfield.TextInputEditText;
-
-import java.io.IOException;
-import java.util.Objects;
-
-import it.sapienza.datalogger.sensor_logger.SensorLogger;
 
 import static it.sapienza.datalogger.utility.Utility.DEBUG;
 
@@ -39,7 +31,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     private int samplingRate;
 
-    private SensorLogger sensorLogger;
     private SensorManager mSensorManager;
 
     private Sensor gyroscope, accelerometer;
@@ -47,7 +38,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private long startTime = 0L;
 
     private TextView debugger;
-    private TextInputEditText customTimeEditText, customPathEditText;
+    private TextInputEditText customTimeEditText;
     private RadioGroup timeRadioGroup;
 
     @Override
@@ -66,9 +57,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         accelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 
         customTimeEditText = findViewById(R.id.custom_time_value);
-        customPathEditText = findViewById(R.id.custom_path);
-
-        customPathEditText.setOnClickListener(v -> selectSavePath());
 
         timeRadioGroup = findViewById(R.id.timeRadioGroup);
 
@@ -107,49 +95,26 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         final SensorEventListener listener = this;
         startBtn.setOnClickListener(v -> {
-            if (Objects.isNull(sensorLogger)) {
-                writeDebug("Select a saving directory, data taking not started!");
-                return;
-            }
-
             writeDebug("Started data taking.");
-            try {
-                customPathEditText.setEnabled(false);
-                customPathEditText.setOnClickListener(null);
-                sensorLogger.openLogger(getContentResolver());
 
-                samplingRate = customTimeEditText.isEnabled() ? getCustomTime(String.valueOf(customTimeEditText.getText())) : samplingRate;
-                mSensorManager.registerListener(listener, accelerometer, samplingRate);
-                mSensorManager.registerListener(listener, gyroscope, samplingRate);
+            samplingRate = customTimeEditText.isEnabled() ? getCustomTime(String.valueOf(customTimeEditText.getText())) : samplingRate;
+            mSensorManager.registerListener(listener, accelerometer, samplingRate);
+            mSensorManager.registerListener(listener, gyroscope, samplingRate);
 
-                timeRadioGroup.setEnabled(false);
-                startBtn.setEnabled(false);
-                customTimeEditText.setEnabled(false);
-                stopBtn.setEnabled(true);
-
-            } catch (IOException e) {
-                e.printStackTrace();
-                writeDebug(e.getMessage());
-                stopBtn.performClick();
-            }
+            timeRadioGroup.setEnabled(false);
+            startBtn.setEnabled(false);
+            customTimeEditText.setEnabled(false);
+            stopBtn.setEnabled(true);
         });
 
         stopBtn.setOnClickListener(v -> {
             writeDebug("Data taking stopped.");
-            try {
-                mSensorManager.unregisterListener(listener);
-                sensorLogger.closeLogger();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            mSensorManager.unregisterListener(listener);
             stopBtn.setEnabled(false);
             timeRadioGroup.setEnabled(true);
             startBtn.setEnabled(true);
             customTimeEditText.setEnabled(true);
-            customPathEditText.setEnabled(true);
-            customPathEditText.setOnClickListener(view -> selectSavePath());
         });
-
         stopBtn.setEnabled(false);
 
         settingsBtn.setOnClickListener(v -> {
@@ -172,9 +137,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         }
     }
 
-    private void selectSavePath() {
-        startActivityForResult(new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE), REQUEST_SAVE_PATH);
-    }
 
     /**
      * values = xValue,yValue,zValue
@@ -186,14 +148,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         if (startTime == 0L)
             startTime = event.timestamp;
 
-        String values = String.format("%s,%s,%s", event.values[0], event.values[1], event.values[2]);
+//        String values = String.format("%s,%s,%s", event.values[0], event.values[1], event.values[2]);
         long timestamp = event.timestamp - startTime;
-
-        try {
-            sensorLogger.writeLog(event.sensor.getStringType(), timestamp, values);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        processData(timestamp, event.values[0], event.values[1], event.values[2]);
     }
 
     @Override
@@ -201,31 +158,36 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         writeDebug("Accuracy of " + sensor.getStringType() + " changed, new accuracy: \"" + accuracy + "\"");
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        switch (requestCode) {
-            case REQUEST_EXTERNAL_STORAGE:
-                if (resultCode == Activity.RESULT_OK) {
-                    selectSavePath();
-                } else {
-                    writeDebug("Permission not provided. The application cannot work without permissions!");
-                }
-                break;
-            case REQUEST_SAVE_PATH:
-                if (resultCode == Activity.RESULT_OK) {
-                    Uri treeUri = data.getData();
-                    DocumentFile pickedDir = DocumentFile.fromTreeUri(this, treeUri);
-                    grantUriPermission(getPackageName(), treeUri, Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-                    getContentResolver().takePersistableUriPermission(treeUri, Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
 
-                    sensorLogger = new SensorLogger(pickedDir);
-                    customPathEditText.setText(sensorLogger.getPath());
-                } else {
-                    writeDebug("Error, the application does not have permissions of saving on the path");
-                }
-                break;
-        }
+    /**
+     * function of data processing
+     *
+     * @param timestamp time of the measure
+     * @param xValue    value of x axis of accelerometer
+     * @param yValue    value of y axis of accelerometer
+     * @param zValue    value of z axis of accelerometer
+     */
+    private void processData(long timestamp, float xValue, float yValue, float zValue) {
+        // TODO: 10/04/2020 @lekamusalam tutto tuo, se ti servono classi ed ausiliarie ed altra roba fammi sapere
+        raiseAlarm("testo da decidere");
+    }
+
+    /**
+     * Temporary stub in case of unwanted message
+     */
+    private void raiseAlarm() {
+        raiseAlarm("");
+    }
+
+    /**
+     * Raise the allarm
+     *
+     * @param message message to be displayed in the UI
+     */
+    private void raiseAlarm(String message) {
+        runOnUiThread(() -> {
+            Toast.makeText(getBaseContext(), message, Toast.LENGTH_LONG).show();
+        });
     }
 
 
