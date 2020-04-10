@@ -12,7 +12,9 @@ import android.hardware.SensorManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 
@@ -54,6 +56,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         setContentView(R.layout.activity_main);
         Button startBtn = findViewById(R.id.buttonStart);
         Button stopBtn = findViewById(R.id.buttonStop);
+        Button settingsBtn = findViewById(R.id.buttonSettings);
 
         debugger = findViewById(R.id.debugger);
 
@@ -149,6 +152,17 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         stopBtn.setEnabled(false);
 
+        settingsBtn.setOnClickListener(v -> {
+            LinearLayout settingsLayout = findViewById(R.id.settings);
+            if (settingsLayout.getVisibility() == View.INVISIBLE) {
+                ((Button) v).setText(R.string.toggle_settings);
+                settingsLayout.setVisibility(View.VISIBLE);
+            } else {
+                ((Button) v).setText(R.string.settings);
+                settingsLayout.setVisibility(View.INVISIBLE);
+            }
+        });
+
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             if (DEBUG)
                 Log.d(TAG, "ReadExternalStoragePermission() not granted");
@@ -180,12 +194,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
-        writeDebug("Accuracy of " + sensor.getStringType() + " changed.");
+        writeDebug("Accuracy of " + sensor.getStringType() + " changed, new accuracy: \"" + accuracy + "\"");
     }
 
     @Override
@@ -209,7 +222,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     sensorLogger = new SensorLogger(pickedDir);
                     customPathEditText.setText(sensorLogger.getPath());
                 } else {
-                    writeDebug("Error");
+                    writeDebug("Error, the application does not have permissions of saving on the path");
                 }
                 break;
         }
