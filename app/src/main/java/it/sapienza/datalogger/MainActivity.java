@@ -33,7 +33,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     private SensorManager mSensorManager;
 
-    private Sensor gyroscope, accelerometer;
+    private Sensor accelerometer;
 
     private long startTime = 0L;
 
@@ -53,7 +53,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         assert mSensorManager != null;
-        gyroscope = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+
         accelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 
         customTimeEditText = findViewById(R.id.custom_time_value);
@@ -99,7 +99,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
             samplingRate = customTimeEditText.isEnabled() ? getCustomTime(String.valueOf(customTimeEditText.getText())) : samplingRate;
             mSensorManager.registerListener(listener, accelerometer, samplingRate);
-            mSensorManager.registerListener(listener, gyroscope, samplingRate);
 
             timeRadioGroup.setEnabled(false);
             startBtn.setEnabled(false);
