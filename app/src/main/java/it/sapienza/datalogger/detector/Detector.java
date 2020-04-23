@@ -11,9 +11,14 @@ public class Detector {
     // Deque maximum size (from 3 to n)
     private int reading_buf_size;
 
-    private Detector() {
-        this.state = DynamicState.Initial;
-    }
+    // Thresholds (parameters)
+    // Cumulative strenght of the signal
+    private int max_signal_cumul_strenght;
+    private double dacc_threshold;
+
+
+
+    private Detector() { this.state = DynamicState.Initial; }
 
     public static synchronized Detector getInstance() {
         if (instance == null) {
@@ -27,6 +32,15 @@ public class Detector {
         for(int i = 0; i < data.length-1; i++) {
             output[i] = data[i+1] - data[i];
         }
+        return output;
+    }
+
+    private double avg(double[] data) {
+        double output = 0.0f;
+        for(Double d : data) {
+            output += d;
+        }
+        output /= data.length;
         return output;
     }
 
@@ -50,6 +64,15 @@ public class Detector {
         // At this point we've got acc, dacc, ddacc that we can use to
         // study the current state of the user.
 
+        // Use dacc to observe walking patterns. Can be computed by averaging
+        // the dacc vector and comparing it with a threshold
+        double mean_dacc = avg(dacc);
+        if (mean_dacc >= this.dacc_threshold) {
+            return DynamicSignal.Moving;
+        }
+
+        // TODO
+
         return DynamicSignal.Idle;
     }
 
@@ -66,6 +89,12 @@ public class Detector {
         DynamicSignal evalSignal = computeSignal();
         //TODO
         return 0;
+    }
+
+    public void init(int buf_size) {
+        if(buf_size > 0) {
+            this.reading_buf_size = buf_size;
+        }
     }
 
 }
