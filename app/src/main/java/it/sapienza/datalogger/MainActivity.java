@@ -24,7 +24,15 @@ import com.google.android.material.textfield.TextInputEditText;
 
 import static it.sapienza.datalogger.utility.Utility.DEBUG;
 
-public class MainActivity extends AppCompatActivity implements SensorEventListener {
+import java.util.Observable;
+import java.util.Observer;
+
+import it.sapienza.datalogger.detector.Detector;
+import it.sapienza.datalogger.detector.DynamicSignal;
+import it.sapienza.datalogger.detector.DynamicState;
+
+
+public class MainActivity extends AppCompatActivity implements SensorEventListener, Observer{
     private static final int REQUEST_EXTERNAL_STORAGE = 0;
     private static final int REQUEST_SAVE_PATH = 1;
     private static final String TAG = MainActivity.class.getSimpleName();
@@ -40,6 +48,16 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private TextView debugger;
     private TextInputEditText customTimeEditText;
     private RadioGroup timeRadioGroup;
+
+    /*
+    DFA related variables
+     */
+    private DynamicState state;
+    // Detector hyperparameters
+    private int detBufSize = 5;
+    private double detDaccThresh; // dacc threshold
+    private double detDaccFallThreshold;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -134,6 +152,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
                     REQUEST_EXTERNAL_STORAGE);
         }
+
+        // Instantiate the state var
+        this.state = DynamicState.STEADY;
+
+        Detector.getInstance().init(detBufSize, detDaccThresh, detDaccFallThreshold);
+
     }
 
 
@@ -168,7 +192,21 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
      */
     private void processData(long timestamp, float xValue, float yValue, float zValue) {
         // TODO: 10/04/2020 @lekamusalam tutto tuo, se ti servono classi ed ausiliarie ed altra roba fammi sapere
-        raiseAlarm("testo da decidere");
+        Detector.getInstance().readSample(xValue, yValue, zValue);
+        //raiseAlarm("testo da decidere");
+    }
+
+    @Override
+    public void update(Observable o, Object arg) {
+        if (o instanceof Detector) {
+            DynamicSignal inputSignal = (DynamicSignal)arg;
+            DynamicState newState = this.state.transition(inputSignal);
+            if ((newState == DynamicState.FALLING ||
+                    newState == DynamicState.PATTACK) &&
+                    newState != this.state) {
+                raiseAlarm("TODO");
+            }
+        }
     }
 
     /**
@@ -226,5 +264,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         if (DEBUG)
             Log.d(TAG, message);
     }
+
 
 }
