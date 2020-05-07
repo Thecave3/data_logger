@@ -1,13 +1,19 @@
 package it.sapienza.datalogger;
 
 import android.Manifest;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -18,24 +24,30 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.core.content.ContextCompat;
 
 import com.google.android.material.textfield.TextInputEditText;
 
-import static it.sapienza.datalogger.utility.Utility.DEBUG;
-
 import java.util.Observable;
 import java.util.Observer;
+import java.util.concurrent.ThreadLocalRandom;
 
 import it.sapienza.datalogger.detector.Detector;
 import it.sapienza.datalogger.detector.DynamicSignal;
 import it.sapienza.datalogger.detector.DynamicState;
 
+import static it.sapienza.datalogger.utility.Utility.DEBUG;
 
-public class MainActivity extends AppCompatActivity implements SensorEventListener, Observer{
+
+public class MainActivity extends AppCompatActivity implements SensorEventListener, Observer {
     private static final int REQUEST_EXTERNAL_STORAGE = 0;
     private static final int REQUEST_SAVE_PATH = 1;
     private static final String TAG = MainActivity.class.getSimpleName();
+
+    private final static String CHANNEL_ID = "falling_channel";
+    private final static long[] vibrationPattern = new long[]{0, 1500, 0, 1500};
 
     private int samplingRate;
 
@@ -115,7 +127,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         final SensorEventListener listener = this;
         startBtn.setOnClickListener(v -> {
             writeDebug("Started data taking.");
-
             samplingRate = customTimeEditText.isEnabled() ? getCustomTime(String.valueOf(customTimeEditText.getText())) : samplingRate;
             mSensorManager.registerListener(listener, accelerometer, samplingRate);
 
@@ -160,6 +171,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         Detector.getInstance().init(detBufSize, confBufSize, detDaccThresh, detDaccFallThreshold);
         Detector.getInstance().addObserver(this);
 
+        createNotificationChannel();
     }
 
 
@@ -193,41 +205,46 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
      * @param zValue    value of z axis of accelerometer
      */
     private void processData(long timestamp, float xValue, float yValue, float zValue) {
-        // TODO: 10/04/2020 @lekamusalam tutto tuo, se ti servono classi ed ausiliarie ed altra roba fammi sapere
         Detector.getInstance().readSample(xValue, yValue, zValue);
-        //raiseAlarm("testo da decidere");
     }
 
     @Override
     public void update(Observable o, Object arg) {
         if (o instanceof Detector) {
-            DynamicSignal inputSignal = (DynamicSignal)arg;
+            DynamicSignal inputSignal = (DynamicSignal) arg;
             DynamicState newState = this.state.transition(inputSignal);
             writeDebug("New state set: " + newState.toString());
             if ((newState == DynamicState.FALLING ||
                     newState == DynamicState.PATTACK) &&
                     newState != this.state) {
-                raiseAlarm("TODO");
+                raiseAlarm();
             }
         }
     }
 
-    /**
-     * Temporary stub in case of unwanted message
-     */
-    private void raiseAlarm() {
-        raiseAlarm("");
-    }
 
     /**
      * Raise the allarm
-     *
-     * @param message message to be displayed in the UI
      */
-    private void raiseAlarm(String message) {
+    private void raiseAlarm() {
         runOnUiThread(() -> {
-            Toast.makeText(getBaseContext(), message, Toast.LENGTH_LONG).show();
+            sendNotification("Fall Detected!");
+//            sendMessageAndVibration("Fall Detected!");
         });
+    }
+
+    private void sendMessageAndVibration(String message) {
+        Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+        if (v != null) {
+            // Vibrate for 500 milliseconds
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                v.vibrate(VibrationEffect.createOneShot(1500, VibrationEffect.DEFAULT_AMPLITUDE));
+            } else {
+                v.vibrate(1500);
+            }
+        } else {
+            Toast.makeText(getBaseContext(), message, Toast.LENGTH_LONG).show();
+        }
     }
 
 
@@ -268,5 +285,40 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             Log.d(TAG, message);
     }
 
+    private void sendNotification(String message) {
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
+                .setSmallIcon(R.mipmap.ic_launcher_round)
+                .setVibrate(vibrationPattern)
+                .setPriority(NotificationCompat.PRIORITY_MAX)
+                .setContentTitle(message)
+                .setContentText(message)
+                .setSound(Settings.System.DEFAULT_NOTIFICATION_URI)
+                .setAutoCancel(true)
+                .setTimeoutAfter(5000);
+
+        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
+
+        notificationManager.notify(ThreadLocalRandom.current().nextInt(), builder.build());
+
+    }
+
+    private void createNotificationChannel() {
+        // Create the NotificationChannel, but only on API 26+ because
+        // the NotificationChannel class is new and not in the support library
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence name = getString(R.string.channel_name);
+            String description = getString(R.string.channel_description);
+
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, NotificationManager.IMPORTANCE_HIGH);
+            channel.setDescription(description);
+            channel.setVibrationPattern(vibrationPattern);
+            channel.enableVibration(true);
+            // Register the channel with the system; you can't change the importance
+            // or other notification behaviors after this
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
+        }
+    }
 
 }

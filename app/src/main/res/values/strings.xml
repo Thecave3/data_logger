@@ -13,4 +13,6 @@
     <string name="desc_custom_path">Path in which the file will be saved</string>
     <string name="settings">SETTINGS</string>
     <string name="toggle_settings">Toggle Settings</string>
+    <string name="channel_description">Channel to send falling notifications</string>
+    <string name="channel_name">Notification channel</string>
 </resources>
