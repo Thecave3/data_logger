@@ -1,4 +1,6 @@
 package it.sapienza.datalogger.detector;
+import android.util.Log;
+
 import java.lang.Math;
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -146,7 +148,7 @@ public class Detector extends Observable {
         this.confidenceBuf.addLast(mlIdx);
 
         // Extract the most probable (frequent) signal index from the confidenceBuf
-        mlIdx = mostFrequent((Integer[])this.confidenceBuf.toArray());
+        mlIdx = mostFrequent((Integer[])this.confidenceBuf.toArray(new Integer[this.confidenceBuf.size()]));
         return signalFromInteger(mlIdx);
     }
 
@@ -168,9 +170,12 @@ public class Detector extends Observable {
         this.prevSignal = evalSignal;
     }
 
-    public void init(int bufSize, double daccThreshold, double daccFallThreshold) {
+    public void init(int bufSize, int confidenceBufSize, double daccThreshold, double daccFallThreshold) {
         if (bufSize > 0) {
             this.readingBufSize = bufSize;
+        }
+        if (confidenceBufSize > 0) {
+            this.confidenceBufSize = confidenceBufSize;
         }
         this.daccThreshold = daccThreshold;
         this.daccFallThreshold = daccFallThreshold;
