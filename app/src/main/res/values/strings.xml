@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Data Logger</string>
+    <string name="app_name">Activity Detector</string>
     <string name="start">START</string>
     <string name="stop">STOP</string>
     <string name="select_time">Please select sampling time:</string>

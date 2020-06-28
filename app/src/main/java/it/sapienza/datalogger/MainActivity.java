@@ -129,6 +129,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             startBtn.setEnabled(false);
             customTimeEditText.setEnabled(false);
             stopBtn.setEnabled(true);
+            this.state = DynamicState.STEADY;
         });
 
         stopBtn.setOnClickListener(v -> {
@@ -208,11 +209,15 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         if (o instanceof Detector) {
             DynamicSignal inputSignal = (DynamicSignal) arg;
             DynamicState newState = this.state.transition(inputSignal);
-            writeDebug("New state set: " + newState.toString());
-            if ((newState == DynamicState.FALLING ||
-                    newState == DynamicState.PATTACK) &&
-                    newState != this.state) {
-                raiseAlarm();
+            if (newState == DynamicState.STEADY) {
+                writeDebug("Im steady.");
+            }
+            if (newState != this.state) {
+                writeDebug("New state set: " + newState.toString());
+                if (newState == DynamicState.FALLING || newState == DynamicState.PATTACK) {
+                    raiseAlarm();
+                }
+                this.state = newState;
             }
         }
     }

@@ -5,6 +5,7 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.Observable;
+import android.util.Log;
 
 public class Detector extends Observable {
     private static Detector instance;
@@ -29,6 +30,7 @@ public class Detector extends Observable {
 
     private Detector() {
         readingBuf = new ArrayDeque<Double>();
+        confidenceTable = new double[DynamicSignal.values().length];
 
         // Install evaluators
         evaluators = new ArrayList<SignalEvaluator>();
@@ -123,6 +125,7 @@ public class Detector extends Observable {
         }
         // Search and return highest confidence signal.
         int maxConfidenceIdx = argmax(this.confidenceTable);
+        Log.d("detector", "Current output signal is: " + signalFromInteger(maxConfidenceIdx));
         return signalFromInteger(maxConfidenceIdx);
     }
 

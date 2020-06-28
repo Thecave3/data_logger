@@ -14,7 +14,7 @@ public enum DynamicState {
         STEADY.idle = STEADY; STEADY.moving = WALKING; STEADY.falling = FALLING;
         STEADY.warmStop = STEADY; STEADY.coldStop = STEADY;
         // WALKING transitions
-        WALKING.idle = WALKING; WALKING.moving = WALKING; WALKING.falling = FALLING;
+        WALKING.idle = STEADY; WALKING.moving = WALKING; WALKING.falling = FALLING;
         WALKING.warmStop = STEADY; WALKING.coldStop = PATTACK;
         // FALLING transitions
         FALLING.idle = FALLING; FALLING.moving = FALLING; FALLING.falling = FALLING;
