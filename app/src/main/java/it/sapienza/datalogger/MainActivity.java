@@ -65,11 +65,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     DFA related variables
      */
     private DynamicState state;
-    // Detector hyperparameters
-    private int detBufSize = 20;
-    private int confBufSize = 10;
-    private double detDaccThresh = 0.3; // dacc threshold (for moving signal mostly)
-    private double detDaccFallThreshold = 2.0; // dacc threshold (for falling signal)
 
 
     @Override
@@ -168,7 +163,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         // Instantiate the state var
         this.state = DynamicState.STEADY;
 
-        Detector.getInstance().init(detBufSize, confBufSize, detDaccThresh, detDaccFallThreshold);
+        Detector.getInstance().init();
         Detector.getInstance().addObserver(this);
 
         createNotificationChannel();
