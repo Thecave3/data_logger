@@ -1,7 +1,8 @@
 package it.sapienza.datalogger.detector;
 
 public abstract class SignalEvaluator {
-    abstract double[] predict(double[] sample);
+    abstract DynamicSignal predict(double[] sample);
+    //abstract double[] predict(double[] sample);
     abstract double getConfidence();
     abstract boolean ready();
 }
