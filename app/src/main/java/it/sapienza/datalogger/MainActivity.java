@@ -14,7 +14,6 @@ import android.os.Bundle;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.provider.Settings;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
@@ -37,8 +36,6 @@ import java.util.concurrent.ThreadLocalRandom;
 import it.sapienza.datalogger.detector.Detector;
 import it.sapienza.datalogger.detector.DynamicSignal;
 import it.sapienza.datalogger.detector.DynamicState;
-
-import static it.sapienza.datalogger.utility.Utility.DEBUG;
 
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener, Observer {
@@ -154,8 +151,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         });
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            if (DEBUG)
-                Log.d(TAG, "ReadExternalStoragePermission() not granted");
             ActivityCompat.requestPermissions(this,
                     new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
                     REQUEST_EXTERNAL_STORAGE);
@@ -278,11 +273,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             if (debugger.getLineCount() == debugger.getMaxLines())
                 debugger.setText(String.format("%s\n", message));
             else
-                debugger.setText(String.format("%s%s\n", String.valueOf(debugger.getText()), message));
+                debugger.setText(String.format("%s%s\n", debugger.getText(), message));
         });
-
-        if (DEBUG)
-            Log.d(TAG, message);
     }
 
     private void sendNotification(String message) {
