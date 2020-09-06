@@ -5,15 +5,11 @@ import android.util.Log;
 public class AbsoluteMeanEvaluator extends SignalEvaluator{
     private boolean isReady;
     private double confidence;
-    // parameters
-    private double thresholdWalk;
-    private double thresholdFall;
 
     AbsoluteMeanEvaluator(double tWalk, double tFall) {
+        super(tWalk,tFall);
         this.isReady = true;
         this.confidence = 0.0;
-        this.thresholdWalk = tWalk;
-        this.thresholdFall = tFall;
     }
 
     @Override
@@ -25,11 +21,11 @@ public class AbsoluteMeanEvaluator extends SignalEvaluator{
         estimatedSig = DynamicSignal.Idle;
         estimatedConf = 1.0;
 
-        if (sampleAvg > this.thresholdWalk) {
+        if (sampleAvg > this.getThresholdWalk()) {
             estimatedSig = DynamicSignal.Moving;
             estimatedConf = 1.0;
         }
-        if (sampleAvg > this.thresholdFall) {
+        if (sampleAvg > this.getThresholdFall()) {
             estimatedSig = DynamicSignal.Falling;
             estimatedConf = 15.0;
         }
@@ -56,21 +52,5 @@ public class AbsoluteMeanEvaluator extends SignalEvaluator{
         }
         output /= data.length;
         return output;
-    }
-
-    public double getThresholdWalk() {
-        return thresholdWalk;
-    }
-    // TODO(Andrea): Rendere modificabile tramite GUI
-    public void setThresholdWalk(double thresholdWalk) {
-        this.thresholdWalk = thresholdWalk;
-    }
-
-    public double getThresholdFall() {
-        return thresholdFall;
-    }
-    // TODO(Andrea): Rendere modificabile tramite GUI
-    public void setThresholdFall(double thresholdFall) {
-        this.thresholdFall = thresholdFall;
     }
 }

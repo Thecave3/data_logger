@@ -5,15 +5,11 @@ import android.util.Log;
 public class StandardDeviationEvaluator extends SignalEvaluator {
     private boolean isReady;
     private double confidence;
-    // parameters
-    private double thresholdWalk;
-    private double thresholdFall;
 
     StandardDeviationEvaluator(double tWalk, double tFall) {
+        super(tWalk,tFall);
         this.isReady = true;
         this.confidence = 0.0;
-        this.thresholdWalk = tWalk;
-        this.thresholdFall = tFall;
     }
 
     @Override
@@ -25,8 +21,8 @@ public class StandardDeviationEvaluator extends SignalEvaluator {
         estimatedSig = DynamicSignal.Idle;
         estimatedConf = 1.0;
 
-        if (sampleStddev > this.thresholdWalk) estimatedSig = DynamicSignal.Moving;
-        if (sampleStddev > this.thresholdFall) estimatedSig = DynamicSignal.Falling;
+        if (sampleStddev > this.getThresholdWalk()) estimatedSig = DynamicSignal.Moving;
+        if (sampleStddev > this.getThresholdFall()) estimatedSig = DynamicSignal.Falling;
         if (estimatedSig != DynamicSignal.Idle) estimatedConf = 1.0;
         this.confidence = estimatedConf;
         Log.d("StandardDeviationEvaluator", "Predicted: " + estimatedSig + " (" + this.confidence + ") : val = " + sampleStddev);
@@ -56,21 +52,5 @@ public class StandardDeviationEvaluator extends SignalEvaluator {
         }
 
         return Math.sqrt(sd / lenght);
-    }
-
-    public double getThresholdWalk() {
-        return thresholdWalk;
-    }
-    // TODO(Andrea): Rendere modificabile tramite GUI
-    public void setThresholdWalk(double thresholdWalk) {
-        this.thresholdWalk = thresholdWalk;
-    }
-
-    public double getThresholdFall() {
-        return thresholdFall;
-    }
-    // TODO(Andrea): Rendere modificabile tramite GUI
-    public void setThresholdFall(double thresholdFall) {
-        this.thresholdFall = thresholdFall;
     }
 }

@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Deque;
 import java.util.Observable;
+
 import android.util.Log;
 
 public class Detector extends Observable {
@@ -31,11 +32,11 @@ public class Detector extends Observable {
     double stddevFallThresh = 4.0;
 
     private Detector() {
-        readingBuf = new ArrayDeque<Double>();
+        readingBuf = new ArrayDeque<>();
         confidenceTable = new double[DynamicSignal.values().length];
 
         // Install evaluators
-        evaluators = new ArrayList<SignalEvaluator>();
+        evaluators = new ArrayList<>();
         evaluators.add(new AbsoluteMeanEvaluator(absMeanWalkThresh, absMeanFallThresh));
         evaluators.add(new StandardDeviationEvaluator(stddevWalkThresh, stddevFallThresh));
     }
@@ -50,7 +51,7 @@ public class Detector extends Observable {
     private int argmax(double[] data) {
         int maxIdx = 0;
         double maxVal = 0.0;
-        for(int i = 0; i < DynamicSignal.values().length; ++i) {
+        for (int i = 0; i < DynamicSignal.values().length; ++i) {
             if (data[i] > maxVal) {
                 maxVal = data[i];
                 maxIdx = i;
@@ -60,24 +61,23 @@ public class Detector extends Observable {
     }
 
     private DynamicSignal signalFromInteger(int idx) {
-        switch(idx) {
-        case 0:
-            return DynamicSignal.Idle;
-        case 1:
-            return DynamicSignal.Moving;
-        case 2:
-            return DynamicSignal.Falling;
-        case 3:
-            return DynamicSignal.WarmStop;
-        case 4:
-            return DynamicSignal.ColdStop;
-        default:
-            return null;
+        switch (idx) {
+            case 0:
+                return DynamicSignal.Idle;
+            case 1:
+                return DynamicSignal.Moving;
+            case 2:
+                return DynamicSignal.Falling;
+            case 3:
+                return DynamicSignal.WarmStop;
+            case 4:
+                return DynamicSignal.ColdStop;
+            default:
+                return null;
         }
     }
 
     /**
-     *
      * @param acc_x
      * @param acc_y
      * @param acc_z
@@ -89,8 +89,8 @@ public class Detector extends Observable {
             this.readingBuf.addLast(accNorm);
             return;
         }
-         // When deque is full, remove first item before inserting the new one
-         this.readingBuf.removeFirst();
+        // When deque is full, remove first item before inserting the new one
+        this.readingBuf.removeFirst();
         this.readingBuf.addLast(accNorm);
         DynamicSignal evalSignal = computeSignal();
         if (evalSignal != prevSignal) {
@@ -132,8 +132,51 @@ public class Detector extends Observable {
         return signalFromInteger(maxConfidenceIdx);
     }
 
-    public void init() {
-
+    public double getAbsMeanWalkThresh() {
+        return absMeanWalkThresh;
     }
 
+    public void setAbsMeanWalkThresh(double absMeanWalkThresh) {
+        this.absMeanWalkThresh = absMeanWalkThresh;
+        for (SignalEvaluator evaluator : evaluators) {
+            if (evaluator instanceof AbsoluteMeanEvaluator)
+                evaluator.setThresholdWalk(absMeanWalkThresh);
+        }
+    }
+
+    public double getAbsMeanFallThresh() {
+        return absMeanFallThresh;
+    }
+
+    public void setAbsMeanFallThresh(double absMeanFallThresh) {
+        this.absMeanFallThresh = absMeanFallThresh;
+        for (SignalEvaluator evaluator : evaluators) {
+            if (evaluator instanceof AbsoluteMeanEvaluator)
+                evaluator.setThresholdFall(absMeanFallThresh);
+        }
+    }
+
+    public double getStddevWalkThresh() {
+        return stddevWalkThresh;
+    }
+
+    public void setStddevWalkThresh(double stddevWalkThresh) {
+        this.stddevWalkThresh = stddevWalkThresh;
+        for (SignalEvaluator evaluator : evaluators) {
+            if (evaluator instanceof StandardDeviationEvaluator)
+                evaluator.setThresholdWalk(stddevWalkThresh);
+        }
+    }
+
+    public double getStddevFallThresh() {
+        return stddevFallThresh;
+    }
+
+    public void setStddevFallThresh(double stddevFallThresh) {
+        this.stddevFallThresh = stddevFallThresh;
+        for (SignalEvaluator evaluator : evaluators) {
+            if (evaluator instanceof StandardDeviationEvaluator)
+                evaluator.setThresholdFall(stddevFallThresh);
+        }
+    }
 }

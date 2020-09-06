@@ -16,4 +16,7 @@
     <string name="channel_description">Channel to send falling notifications</string>
     <string name="channel_name">Notification channel</string>
     <string name="logo">logo applicazione</string>
+    <string name="fogdelta_time_ms">FoGDelta Time (ms)</string>
+    <string name="ame_walk_threshold">AME Walk threshold</string>
+    <string name="ame_fall_threshold">AME Fall Threshold</string>
 </resources>

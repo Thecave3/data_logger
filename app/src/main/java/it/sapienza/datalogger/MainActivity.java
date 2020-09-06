@@ -9,11 +9,19 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.media.MediaPlayer;
+import android.media.Ringtone;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.CountDownTimer;
+import android.os.Handler;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.provider.Settings;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -30,6 +38,7 @@ import androidx.core.content.ContextCompat;
 
 import com.google.android.material.textfield.TextInputEditText;
 
+import java.util.Locale;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.concurrent.ThreadLocalRandom;
@@ -44,6 +53,8 @@ import static it.sapienza.datalogger.utility.Utility.DEBUG;
 public class MainActivity extends AppCompatActivity implements SensorEventListener, Observer {
     private static final int REQUEST_EXTERNAL_STORAGE = 0;
     private static final int REQUEST_SAVE_PATH = 1;
+    private final static long FOG_DELTA_TIME_DEFAULT = 5000;
+
     private static final String TAG = MainActivity.class.getSimpleName();
 
     private final static String CHANNEL_ID = "falling_channel";
@@ -54,28 +65,29 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private SensorManager mSensorManager;
 
     private Sensor accelerometer;
+    private Detector detector;
 
     private long startTime = 0L;
 
     private TextView debugger;
     private TextInputEditText customTimeEditText;
     private RadioGroup timeRadioGroup;
+    private Button startBtn, stopBtn;
 
     /*
     DFA related variables
      */
     private DynamicState state;
     private long fogDeltaStart = 0;
-    // TODO(Andrea): Rendere questa variabile modificabile tramite GUI
-    private long fogDeltaTime = 5000;
+    private long fogDeltaTime = FOG_DELTA_TIME_DEFAULT;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Button startBtn = findViewById(R.id.buttonStart);
-        Button stopBtn = findViewById(R.id.buttonStop);
+        startBtn = findViewById(R.id.buttonStart);
+        stopBtn = findViewById(R.id.buttonStop);
         Button settingsBtn = findViewById(R.id.buttonSettings);
 
         debugger = findViewById(R.id.debugger);
@@ -86,6 +98,31 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         accelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
 
         customTimeEditText = findViewById(R.id.custom_time_value);
+
+        TextInputEditText fogDeltaTimeEditText = findViewById(R.id.fogDeltaTime);
+        fogDeltaTimeEditText.setText(String.format(Locale.ITALY, "%d", fogDeltaTime));
+        fogDeltaTimeEditText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                try {
+                    fogDeltaTime = Long.parseLong(editable.toString());
+                } catch (NumberFormatException e) {
+                    writeDebug("Error! Not a correct fog delta time selected! Using default (" + FOG_DELTA_TIME_DEFAULT + ").");
+                    fogDeltaTime = FOG_DELTA_TIME_DEFAULT;
+                }
+
+            }
+        });
 
         timeRadioGroup = findViewById(R.id.timeRadioGroup);
 
@@ -167,10 +204,113 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         // Instantiate the state var
         this.state = DynamicState.STEADY;
 
-        Detector.getInstance().init();
-        Detector.getInstance().addObserver(this);
+        detector = Detector.getInstance();
+
+        detector.addObserver(this);
 
         createNotificationChannel();
+
+        TextInputEditText AMEWalkThresholdEditText = findViewById(R.id.ame_walk_threshold);
+        AMEWalkThresholdEditText.setText(String.format(Locale.ITALY, "%f", detector.getAbsMeanWalkThresh()));
+        AMEWalkThresholdEditText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                double temp = detector.getAbsMeanWalkThresh();
+                try {
+                    detector.setAbsMeanWalkThresh(Double.parseDouble(editable.toString().replace(',', '.')));
+                } catch (NumberFormatException e) {
+                    writeDebug("Error! Not a correct value selected! Restoring previous (" + temp + ").");
+                    detector.setAbsMeanWalkThresh(temp);
+                }
+            }
+        });
+
+        TextInputEditText AMEFallThresholdEditText = findViewById(R.id.ame_fall_threshold);
+        AMEFallThresholdEditText.setText(String.format(Locale.ITALY, "%f", detector.getAbsMeanFallThresh()));
+        AMEFallThresholdEditText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                double temp = detector.getAbsMeanFallThresh();
+                try {
+                    detector.setAbsMeanFallThresh(Double.parseDouble(editable.toString().replace(',', '.')));
+                } catch (NumberFormatException e) {
+                    writeDebug("Error! Not a correct value selected! Restoring previous (" + temp + ").");
+                    detector.setAbsMeanFallThresh(temp);
+                }
+
+            }
+        });
+
+        TextInputEditText STDWalkThresholdEditText = findViewById(R.id.std_walk_threshold);
+        STDWalkThresholdEditText.setText(String.format(Locale.ITALY, "%f", detector.getStddevWalkThresh()));
+        STDWalkThresholdEditText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                double temp = detector.getStddevWalkThresh();
+                try {
+                    detector.setStddevWalkThresh(Double.parseDouble(editable.toString().replace(',', '.')));
+                } catch (NumberFormatException e) {
+                    writeDebug("Error! Not a correct value selected! Restoring previous (" + temp + ").");
+                    detector.setStddevWalkThresh(temp);
+                }
+            }
+        });
+
+        TextInputEditText STDFallThresholdEditText = findViewById(R.id.std_fall_threshold);
+        STDFallThresholdEditText.setText(String.format(Locale.ITALY, "%f", detector.getStddevFallThresh()));
+        STDFallThresholdEditText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                double temp = detector.getStddevFallThresh();
+                try {
+                    detector.setStddevFallThresh(Double.parseDouble(editable.toString().replace(',', '.')));
+                } catch (NumberFormatException e) {
+                    writeDebug("Error! Not a correct value selected! Restoring previous (" + temp + ").");
+                    detector.setStddevFallThresh(temp);
+                }
+            }
+        });
+
     }
 
 
@@ -214,14 +354,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             DynamicSignal inputSignal = (DynamicSignal) arg;
             DynamicState newState = this.state.transition(inputSignal);
             if (newState == DynamicState.STEADY) {
-                writeDebug("Im steady.");
+                writeDebug("I'm steady.");
             }
             if (newState != this.state) {
                 writeDebug("New state set: " + newState.toString());
                 if (newState == DynamicState.FALLING || newState == DynamicState.PATTACK) {
-                    // TODO(Andrea) Fermare la lettura e tornare nella fase iniziale (tasto start attivo,
-                    //              tasto stop disattivo)
                     raiseAlarm();
+                    stopBtn.callOnClick();
                 }
                 if (newState == DynamicState.WALKING && this.state == DynamicState.STEADY) {
                     // Start FoG counter
@@ -230,9 +369,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 if (newState == DynamicState.STEADY && this.state == DynamicState.WALKING) {
                     // Check FoG counter
                     if (System.currentTimeMillis() - this.fogDeltaStart > this.fogDeltaTime) {
-                        // TODO(Andrea): cambiare writeDebug con funzione di vibrazione & avviso
-                        //               (meno invasivo della norma)
+                        sendMessageAndVibration("Warning: Possible FoG!");
                         writeDebug("Warning: Possible FoG!");
+
                     }
                 }
                 this.state = newState;
@@ -260,9 +399,30 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             } else {
                 v.vibrate(1500);
             }
-        } else {
-            Toast.makeText(getBaseContext(), message, Toast.LENGTH_LONG).show();
         }
+
+        try {
+            Uri notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE);
+            Ringtone r = RingtoneManager.getRingtone(getApplicationContext(), notification);
+            r.play();
+
+            new CountDownTimer(1500, 750) {
+                @Override
+                public final void onTick(final long millisUntilFinished) {
+                }
+
+                @Override
+                public final void onFinish() {
+                    r.stop();
+                }
+            }.start();
+
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        Toast.makeText(getBaseContext(), message, Toast.LENGTH_LONG).show();
     }
 
 
