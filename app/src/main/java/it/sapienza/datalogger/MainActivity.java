@@ -65,6 +65,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     DFA related variables
      */
     private DynamicState state;
+    private long fogDeltaStart = 0;
+    // TODO(Andrea): Rendere questa variabile modificabile tramite GUI
+    private long fogDeltaTime = 5000;
 
 
     @Override
@@ -80,7 +83,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         assert mSensorManager != null;
 
-        accelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        accelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
 
         customTimeEditText = findViewById(R.id.custom_time_value);
 
@@ -206,6 +209,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     @Override
     public void update(Observable o, Object arg) {
+
         if (o instanceof Detector) {
             DynamicSignal inputSignal = (DynamicSignal) arg;
             DynamicState newState = this.state.transition(inputSignal);
@@ -215,7 +219,21 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             if (newState != this.state) {
                 writeDebug("New state set: " + newState.toString());
                 if (newState == DynamicState.FALLING || newState == DynamicState.PATTACK) {
+                    // TODO(Andrea) Fermare la lettura e tornare nella fase iniziale (tasto start attivo,
+                    //              tasto stop disattivo)
                     raiseAlarm();
+                }
+                if (newState == DynamicState.WALKING && this.state == DynamicState.STEADY) {
+                    // Start FoG counter
+                    this.fogDeltaStart = System.currentTimeMillis();
+                }
+                if (newState == DynamicState.STEADY && this.state == DynamicState.WALKING) {
+                    // Check FoG counter
+                    if (System.currentTimeMillis() - this.fogDeltaStart > this.fogDeltaTime) {
+                        // TODO(Andrea): cambiare writeDebug con funzione di vibrazione & avviso
+                        //               (meno invasivo della norma)
+                        writeDebug("Warning: Possible FoG!");
+                    }
                 }
                 this.state = newState;
             }

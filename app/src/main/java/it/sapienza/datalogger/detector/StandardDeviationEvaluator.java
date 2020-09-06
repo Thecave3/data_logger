@@ -1,5 +1,7 @@
 package it.sapienza.datalogger.detector;
 
+import android.util.Log;
+
 public class StandardDeviationEvaluator extends SignalEvaluator {
     private boolean isReady;
     private double confidence;
@@ -25,7 +27,9 @@ public class StandardDeviationEvaluator extends SignalEvaluator {
 
         if (sampleStddev > this.thresholdWalk) estimatedSig = DynamicSignal.Moving;
         if (sampleStddev > this.thresholdFall) estimatedSig = DynamicSignal.Falling;
+        if (estimatedSig != DynamicSignal.Idle) estimatedConf = 1.0;
         this.confidence = estimatedConf;
+        Log.d("StandardDeviationEvaluator", "Predicted: " + estimatedSig + " (" + this.confidence + ") : val = " + sampleStddev);
         return estimatedSig;
     }
 
@@ -52,5 +56,21 @@ public class StandardDeviationEvaluator extends SignalEvaluator {
         }
 
         return Math.sqrt(sd / lenght);
+    }
+
+    public double getThresholdWalk() {
+        return thresholdWalk;
+    }
+    // TODO(Andrea): Rendere modificabile tramite GUI
+    public void setThresholdWalk(double thresholdWalk) {
+        this.thresholdWalk = thresholdWalk;
+    }
+
+    public double getThresholdFall() {
+        return thresholdFall;
+    }
+    // TODO(Andrea): Rendere modificabile tramite GUI
+    public void setThresholdFall(double thresholdFall) {
+        this.thresholdFall = thresholdFall;
     }
 }

@@ -3,6 +3,7 @@ package it.sapienza.datalogger.detector;
 import java.lang.Math;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Deque;
 import java.util.Observable;
 import android.util.Log;
@@ -18,14 +19,15 @@ public class Detector extends Observable {
     private double[] confidenceTable;
 
     // Parameters
-    private int windowSize = 20;
-    double maxConfidence = 10;
-    double decayRate = 1;
+    private int windowSize = 30;
+    double maxConfidence = 15;
+    double decayRate = 0.5;
 
     // Evaluators-related parameters
-    double absMeanWalkThresh = 9.5;
+    //double absMeanWalkThresh = 9.5;
+    double absMeanWalkThresh = 1.7;
     double absMeanFallThresh = 15.0;
-    double stddevWalkThresh = 1.0;
+    double stddevWalkThresh = 0.3;
     double stddevFallThresh = 4.0;
 
     private Detector() {
@@ -125,7 +127,8 @@ public class Detector extends Observable {
         }
         // Search and return highest confidence signal.
         int maxConfidenceIdx = argmax(this.confidenceTable);
-        Log.d("detector", "Current output signal is: " + signalFromInteger(maxConfidenceIdx));
+        //Log.d("detector", Arrays.toString(this.confidenceTable) + " maxConfidenceIdx: " + maxConfidenceIdx);
+        //Log.d("detector", "Current output signal is: " + signalFromInteger(maxConfidenceIdx));
         return signalFromInteger(maxConfidenceIdx);
     }
 

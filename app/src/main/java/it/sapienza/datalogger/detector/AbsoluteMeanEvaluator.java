@@ -1,5 +1,7 @@
 package it.sapienza.datalogger.detector;
 
+import android.util.Log;
+
 public class AbsoluteMeanEvaluator extends SignalEvaluator{
     private boolean isReady;
     private double confidence;
@@ -23,9 +25,17 @@ public class AbsoluteMeanEvaluator extends SignalEvaluator{
         estimatedSig = DynamicSignal.Idle;
         estimatedConf = 1.0;
 
-        if (sampleAvg > this.thresholdWalk) estimatedSig = DynamicSignal.Moving;
-        if (sampleAvg > this.thresholdFall) estimatedSig = DynamicSignal.Falling;
+        if (sampleAvg > this.thresholdWalk) {
+            estimatedSig = DynamicSignal.Moving;
+            estimatedConf = 1.0;
+        }
+        if (sampleAvg > this.thresholdFall) {
+            estimatedSig = DynamicSignal.Falling;
+            estimatedConf = 15.0;
+        }
+        if (estimatedSig != DynamicSignal.Idle) estimatedConf = 1.0;
         this.confidence = estimatedConf;
+        Log.d("AbsoluteMeanEvaluator", "Predicted: " + estimatedSig + " (" + this.confidence + ") : val = " + sampleAvg);
         return estimatedSig;
     }
 
@@ -42,9 +52,25 @@ public class AbsoluteMeanEvaluator extends SignalEvaluator{
     private double avg(double[] data) {
         double output = 0.0f;
         for (Double d : data) {
-            output += d;
+            output += Math.abs(d);
         }
         output /= data.length;
         return output;
+    }
+
+    public double getThresholdWalk() {
+        return thresholdWalk;
+    }
+    // TODO(Andrea): Rendere modificabile tramite GUI
+    public void setThresholdWalk(double thresholdWalk) {
+        this.thresholdWalk = thresholdWalk;
+    }
+
+    public double getThresholdFall() {
+        return thresholdFall;
+    }
+    // TODO(Andrea): Rendere modificabile tramite GUI
+    public void setThresholdFall(double thresholdFall) {
+        this.thresholdFall = thresholdFall;
     }
 }
