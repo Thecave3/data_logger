@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Activity Detector</string>
+    <string name="app_name">Balance Care</string>
     <string name="start">START</string>
     <string name="stop">STOP</string>
     <string name="select_time">Please select sampling time:</string>
@@ -15,4 +15,5 @@
     <string name="toggle_settings">Toggle Settings</string>
     <string name="channel_description">Channel to send falling notifications</string>
     <string name="channel_name">Notification channel</string>
+    <string name="logo">logo applicazione</string>
 </resources>
