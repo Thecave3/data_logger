@@ -162,7 +162,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         final SensorEventListener listener = this;
         startBtn.setOnClickListener(v -> {
             writeDebug("Started data taking.");
-            samplingRate = customTimeEditText.isEnabled() ? getCustomTime(String.valueOf(customTimeEditText.getText())) : samplingRate;
+            samplingRate = timeRadioGroup.getCheckedRadioButtonId() == R.id.custom_time ? getCustomTime(String.valueOf(customTimeEditText.getText())) : samplingRate;
             mSensorManager.registerListener(listener, accelerometer, samplingRate);
 
             timeRadioGroup.setEnabled(false);
@@ -353,9 +353,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         if (o instanceof Detector) {
             DynamicSignal inputSignal = (DynamicSignal) arg;
             DynamicState newState = this.state.transition(inputSignal);
-            if (newState == DynamicState.STEADY) {
-                writeDebug("I'm steady.");
-            }
+//            if (newState == DynamicState.STEADY) {
+//                writeDebug("I'm steady.");
+//            }
+
             if (newState != this.state) {
                 writeDebug("New state set: " + newState.toString());
                 if (newState == DynamicState.FALLING || newState == DynamicState.PATTACK) {

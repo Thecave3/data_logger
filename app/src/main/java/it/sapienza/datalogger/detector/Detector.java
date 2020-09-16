@@ -31,7 +31,13 @@ public class Detector extends Observable {
     double stddevWalkThresh = 0.3;
     double stddevFallThresh = 4.0;
 
+    private boolean initialized = false;
+
     private Detector() {
+        this.init();
+    }
+
+    private void init() {
         readingBuf = new ArrayDeque<>();
         confidenceTable = new double[DynamicSignal.values().length];
 
@@ -39,6 +45,7 @@ public class Detector extends Observable {
         evaluators = new ArrayList<>();
         evaluators.add(new AbsoluteMeanEvaluator(absMeanWalkThresh, absMeanFallThresh));
         evaluators.add(new StandardDeviationEvaluator(stddevWalkThresh, stddevFallThresh));
+        this.initialized = true;
     }
 
     public static synchronized Detector getInstance() {
@@ -132,6 +139,12 @@ public class Detector extends Observable {
         return signalFromInteger(maxConfidenceIdx);
     }
 
+    public void deinit() {
+        readingBuf.clear();
+        evaluators.clear();
+        this.initialized = false;
+    }
+
     public double getAbsMeanWalkThresh() {
         return absMeanWalkThresh;
     }
@@ -170,6 +183,10 @@ public class Detector extends Observable {
 
     public double getStddevFallThresh() {
         return stddevFallThresh;
+    }
+
+    public boolean isInitialized() {
+        return initialized;
     }
 
     public void setStddevFallThresh(double stddevFallThresh) {
