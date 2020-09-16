@@ -72,7 +72,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private TextView debugger;
     private TextInputEditText customTimeEditText;
     private RadioGroup timeRadioGroup;
-    private Button startBtn, stopBtn;
+    private Button startBtn, stopBtn, aboutBtn;
 
     /*
     DFA related variables
@@ -311,6 +311,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             }
         });
 
+        aboutBtn = findViewById(R.id.buttonAbout);
+
+        aboutBtn.setOnClickListener(v ->
+                Toast.makeText(this, "Balance Care Application\n" +
+                        "Release 1.2\n" +
+                        "Teleskill Italia S.r.l. © 2020 - Tutti i diritti riservati",
+                        Toast.LENGTH_LONG).show());
     }
 
 
